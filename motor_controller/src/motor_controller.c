@@ -27,9 +27,9 @@ int main(void) {
 }
 
 void ADC_IRQHandler(void) {
-	while (!(LPC_ADC->ADDR1 & ~(1 << 31))) {
+	while (!(LPC_ADC->ADDR0 & ~(1 << 31))) {
 	}
-	ADC0Value = ((LPC_ADC->ADDR1) >> 4) & 0xFFF;
+	ADC0Value = ((LPC_ADC->ADDR0) >> 4) & 0xFFF;
 	if (ADC0Value < 300) {	// Si el PWM está muy bajo, apago
 		LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
 		LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
@@ -37,9 +37,10 @@ void ADC_IRQHandler(void) {
 		LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
 		LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
 		LPC_PWM1->LER |= ((1 << 3) | (1 << 4));		// Actualizo ambos valores
-		LPC_PWM1->PCR &= ~((1 << 11) | (1 << 12));	// Apago los 2 PWM
+		//LPC_PWM1->PCR &= ~((1 << 11) | (1 << 12));	// Apago los 2 PWM
 		flags |= (1 << 3); // Habilito flag de motor frenado
 	} else {
+		flags &= ~(1 << 3);
 		if (flags & 1) {
 			LPC_PWM1->MR4 = ADC0Value;
 			LPC_PWM1->LER |= (1 << 4);

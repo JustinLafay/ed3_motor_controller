@@ -35,11 +35,11 @@ void configADC(void) {
 	LPC_ADC->ADCR |= (1 << 21); //habilita el ADC
 	LPC_SC->PCLKSEL0 |= (3 << 24);  //CCLK/8
 	LPC_ADC->ADCR &= ~(255 << 8);  //[15:8] CLKDIV
-	LPC_ADC->ADCR |= (1 << 1);   // channel
+	LPC_ADC->ADCR |= (1 << 0);   // channel
 	LPC_ADC->ADCR |= (1 << 16);   // burst
-	LPC_PINCON->PINMODE1 |= (1 << 17); //neither pull-up nor pull-down.
-	LPC_PINCON->PINSEL1 |= (1 << 16);
-	LPC_ADC->ADINTEN |= (1 << 1);
+	LPC_PINCON->PINMODE1 |= (1 << 15); //neither pull-up nor pull-down.
+	LPC_PINCON->PINSEL1 |= (1 << 14);
+	LPC_ADC->ADINTEN |= (1 << 0);
 	LPC_ADC->ADINTEN &= ~(1 << 8);
 	NVIC_EnableIRQ(ADC_IRQn);
 	return;
