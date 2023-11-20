@@ -39,7 +39,7 @@ void configADC(void) {
 	LPC_PINCON->PINSEL1 |= (1 << 14);
 	LPC_ADC->ADINTEN |= (1 << 0);
 	LPC_ADC->ADINTEN &= ~(1 << 8);
-	NVIC_EnableIRQ(ADC_IRQn);
+	NVIC_DisableIRQ(ADC_IRQn);
 	return;
 }
 
@@ -89,17 +89,19 @@ void changeRotation(void) {
 }
 
 void configDMA(void){
+	NVIC_DisableIRQ(DMA_IRQn);
 	GPDMA_Channel_CFG_Type channelCFG;
 
 	GPDMA_Init();
-	channelCFG.ChannelNum = 0;
+	channelCFG.ChannelNum = 1;
 	channelCFG.SrcMemAddr = 0;
-	channelCFG.DstMemAddr = (uint32_t)&ADC0Value;
+	channelCFG.DstMemAddr = (uint32_t)&dma_value;
 	channelCFG.TransferSize = 1;
 	channelCFG.TransferType = GPDMA_TRANSFERTYPE_P2M;
 	channelCFG.TransferWidth = 0;
 	channelCFG.SrcConn = GPDMA_CONN_ADC;
 	channelCFG.DstConn = 0;
+	channelCFG.DMALLI = 0;
 	GPDMA_Setup(&channelCFG);
 }
 

@@ -13,5 +13,6 @@
 
 extern uint8_t flags;
 extern uint32_t ADC0Value;
+extern uint32_t dma_value;
 
 #endif

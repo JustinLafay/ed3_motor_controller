@@ -17,10 +17,11 @@ int main(void) {
 	configInterrupts();
 	configPWM1();
 	configADC();
-	configDMA();
-	GPDMA_ChannelCmd(0, ENABLE);
 
 	while (1) {
+		configDMA();
+		GPDMA_ChannelCmd(1, ENABLE);
+		ADC0Value = (dma_value>>4)&0xFFF;
 		if (ADC0Value < 300) {					// Si el PWM está muy bajo, apago
 			LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
 			LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
@@ -41,10 +42,6 @@ int main(void) {
 		}
 	}
 	return 0;
-}
-
-void ADC_IRQHandler(void){
-
 }
 
 // Handler Interrupción cambio de sentido
@@ -70,7 +67,6 @@ void EINT1_IRQHandler(void) {
 	}
 	delay(10000);
 	LPC_SC->EXTINT |= (1 << 1);   // Limpia bandera
-	NVIC_EnableIRQ(ADC_IRQn);
 }
 
 // Handler Parada de emergencia
@@ -82,7 +78,6 @@ void EINT2_IRQHandler(void) {
 	delay(1000000);
 	if ((flags & (1 << 1)) != 0) { // Si la parada de emergencia está activada
 		flags &= ~(1 << 1);	// La desactivo
-		NVIC_EnableIRQ(ADC_IRQn);
 	} else {
 		flags |= (1 << 1); // Sino, la activo
 		emergencyStop();

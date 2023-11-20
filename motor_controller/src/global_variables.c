@@ -2,3 +2,4 @@
 
 uint8_t flags = 0;
 uint32_t ADC0Value = 0;
+uint32_t dma_value = 0;
