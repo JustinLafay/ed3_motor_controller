@@ -21,7 +21,7 @@ void configPWM1(void) {
 	LPC_PWM1->PR = 20;
 	LPC_PINCON->PINSEL4 |= ((1 << 4) | (1 << 6));		// P2.2 y P2.3 PWM
 	LPC_PWM1->MR0 = 4095;  // Establecer el valor máximo del contador del canal
-	LPC_PWM1->MR3 = 2000; // Establecer el valor deseado para el canal PWM1.3
+	LPC_PWM1->MR3 = 40; // Establecer el valor deseado para el canal PWM1.3
 	LPC_PWM1->MR4 = 0;	// Valor del PWM1.4 en 0
 	LPC_PWM1->MCR |= (1 << 9); // Habilitar la interrupción al coincidir con el canal 3		//revisar
 	LPC_PWM1->LER |= (1 << 3); // Cargar el nuevo valor de MR3 al registro de comparación
