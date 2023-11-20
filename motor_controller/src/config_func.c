@@ -1,6 +1,4 @@
 #include "headers.h"
-#include "config_func.h"
-#include "LPC17xx.h"
 
 void configPins(void) {
 
@@ -88,6 +86,10 @@ void changeRotation(void) {
 		LPC_GPIO2->FIOSET |= (1 << 5);	// P2.5 Trans. inferior encendido
 	}
 	LPC_PWM1->TCR = (1<<0) | (1<<3);
+}
+
+void configDMA(void){
+
 }
 
 void frenar(void) {

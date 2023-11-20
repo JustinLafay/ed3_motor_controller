@@ -9,5 +9,6 @@ void emergencyStop(void);
 void changeRotation(void);
 void frenar(void);
 void delay(int);
+void configDMA(void);
 
 #endif

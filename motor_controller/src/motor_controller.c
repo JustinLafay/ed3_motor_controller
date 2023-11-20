@@ -10,8 +10,6 @@
  * activate or otherwise use the software.
  */
 #include "headers.h"
-#include "LPC17xx.h"
-#include "config_func.h"
 
 int main(void) {
 
@@ -21,33 +19,30 @@ int main(void) {
 	configADC();
 
 	while (1) {
+		if (ADC0Value < 300) {					// Si el PWM está muy bajo, apago
+			LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
+			LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
+			LPC_GPIO2->FIOCLR |= ((1 << 4) | (1 << 5));	// Apago parte inferior completa Puente H
+			LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
+			LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
+			LPC_PWM1->LER |= ((1 << 3) | (1 << 4));		// Actualizo ambos valores
+			flags |= (1 << 3); 					// Habilito flag de motor frenado
+		} else {
+			flags &= ~(1 << 3);
+			if (flags & 1) {
+				LPC_PWM1->MR4 = ADC0Value;
+				LPC_PWM1->LER |= (1 << 4);
+			} else {
+				LPC_PWM1->MR3 = ADC0Value;
+				LPC_PWM1->LER |= (1 << 3);
+			}
+		}
 	}
 	return 0;
 }
 
-void ADC_IRQHandler(void) {
-	while (!(LPC_ADC->ADDR0 & ~(1 << 31))) {
-	}
-	ADC0Value = ((LPC_ADC->ADDR0) >> 4) & 0xFFF;
-	if (ADC0Value < 300) {	// Si el PWM está muy bajo, apago
-		LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
-		LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
-		LPC_GPIO2->FIOCLR |= ((1 << 4) | (1 << 5));	// Apago parte inferior completa Puente H
-		LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
-		LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
-		LPC_PWM1->LER |= ((1 << 3) | (1 << 4));		// Actualizo ambos valores
-		flags |= (1 << 3); // Habilito flag de motor frenado
-	} else {
-		flags &= ~(1 << 3);
-		if (flags & 1) {
-			LPC_PWM1->MR4 = ADC0Value;
-			LPC_PWM1->LER |= (1 << 4);
-		} else {
-			LPC_PWM1->MR3 = ADC0Value;
-			LPC_PWM1->LER |= (1 << 3);
-		}
-	}
-	return;
+void ADC_IRQHandler(void){
+
 }
 
 // Handler Interrupción cambio de sentido
