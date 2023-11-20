@@ -1,7 +1,9 @@
 #include "headers.h"
 
 void configPins(void) {
-
+	LPC_GPIO2->FIODIR |= (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7) | (1 << 8);
+	LPC_GPIO2->FIOSET |= (1 << 5) | (1 << 6) | (1 << 7);
+	LPC_GPIO2->FIOCLR |= (1 << 4) | (1 << 8);
 }
 
 void configInterrupts(void) {
@@ -51,7 +53,6 @@ void emergencyStop(void) {
 	LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
 	LPC_PWM1->LER |= ((1 << 3) | (1 << 4));	// Actualizo ambos valores
 	LPC_GPIO2->FIOCLR |= ((1 << 2) | (1 << 3));	// PWM1.3 y PWM1.4 off
-	NVIC_DisableIRQ(ADC_IRQn);
 }
 
 // Generar movimiento
@@ -106,7 +107,6 @@ void configDMA(void){
 }
 
 void frenar(void) {
-	NVIC_DisableIRQ(ADC_IRQn);
 	ADC0Value = 0;
 	flags |= (1 << 3);
 }

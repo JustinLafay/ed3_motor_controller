@@ -10,5 +10,6 @@ void changeRotation(void);
 void frenar(void);
 void delay(int);
 void configDMA(void);
+void configTimerCAP(void);
 
 #endif

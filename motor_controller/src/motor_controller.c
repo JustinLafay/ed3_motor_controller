@@ -33,9 +33,13 @@ int main(void) {
 		} else {
 			flags &= ~(1 << 3);
 			if (flags & 1) {
+				LPC_GPIO2->FIOCLR |= (1 << 7);
+				LPC_GPIO2->FIOSET |= (1 << 6);
 				LPC_PWM1->MR4 = ADC0Value;
 				LPC_PWM1->LER |= (1 << 4);
 			} else {
+				LPC_GPIO2->FIOCLR |= (1 << 8);
+				LPC_GPIO2->FIOSET |= (1 << 6);
 				LPC_PWM1->MR3 = ADC0Value;
 				LPC_PWM1->LER |= (1 << 3);
 			}
@@ -73,9 +77,9 @@ void EINT1_IRQHandler(void) {
 void EINT2_IRQHandler(void) {
 	LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago verde y azul
 	LPC_GPIO2->FIOCLR |= (1 << 6); // Prendo rojo
-	delay(3000000);
+	delay(100000);
 	LPC_GPIO2->FIOCLR |= (1 << 6); // Apago rojo
-	delay(1000000);
+	delay(100000);
 	if ((flags & (1 << 1)) != 0) { // Si la parada de emergencia está activada
 		flags &= ~(1 << 1);	// La desactivo
 	} else {
