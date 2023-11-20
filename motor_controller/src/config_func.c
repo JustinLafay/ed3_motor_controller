@@ -89,7 +89,18 @@ void changeRotation(void) {
 }
 
 void configDMA(void){
+	GPDMA_Channel_CFG_Type channelCFG;
 
+	GPDMA_Init();
+	channelCFG.ChannelNum = 0;
+	channelCFG.SrcMemAddr = 0;
+	channelCFG.DstMemAddr = (uint32_t)&ADC0Value;
+	channelCFG.TransferSize = 1;
+	channelCFG.TransferType = GPDMA_TRANSFERTYPE_P2M;
+	channelCFG.TransferWidth = 0;
+	channelCFG.SrcConn = GPDMA_CONN_ADC;
+	channelCFG.DstConn = 0;
+	GPDMA_Setup(&channelCFG);
 }
 
 void frenar(void) {

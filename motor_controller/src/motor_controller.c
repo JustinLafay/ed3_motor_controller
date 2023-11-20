@@ -17,6 +17,8 @@ int main(void) {
 	configInterrupts();
 	configPWM1();
 	configADC();
+	configDMA();
+	GPDMA_ChannelCmd(0, ENABLE);
 
 	while (1) {
 		if (ADC0Value < 300) {					// Si el PWM está muy bajo, apago
