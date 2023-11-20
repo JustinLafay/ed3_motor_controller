@@ -1,0 +1,5 @@
+.metadata
+.mcuxpressoide_packages_support
+ZephyrRTOS_TAD_logs/
+FreeRTOS_TAD_logs/
+AzureRTOS_TAD_logs/
