@@ -19,7 +19,7 @@ void configPWM1(void) {
 	LPC_SC->PCONP |= (1 << 6);  // Encender el módulo PWM1
 	LPC_SC->PCLKSEL0 |= (3 << 12); // Establecer la fuente de reloj para PWM1 CCLK/8
 	LPC_PWM1->PR = 20;
-	LPC_PINCON->PINSEL4 |= ((1 << 4) | (1 << 6));		// P2.2 y P2.3 PWM
+	LPC_PINCON->PINSEL4 |= ((1 << 4) | (1 << 6));		// P2.3 y P2.4 PWM
 	LPC_PWM1->MR0 = 4095;  // Establecer el valor máximo del contador del canal
 	LPC_PWM1->MR3 = 40; // Establecer el valor deseado para el canal PWM1.3
 	LPC_PWM1->MR4 = 0;	// Valor del PWM1.4 en 0
@@ -69,6 +69,8 @@ void changeRotation(void) {
 	LPC_PWM1->TCR = (1<<1) ;
 	if (flags & 1) {// Para un lado, apago los otros y enciendo los que van --> P2.2 y P2.4
 		LPC_GPIO2->FIOCLR |= (1 << 5);		// P2.5 Trans. inferior apagado
+		LPC_PWM1->MR3 = 0;
+		LPC_PWM1->LER |= (1 << 3);
 		LPC_PWM1->PCR &= ~(1 << 11);
 		LPC_GPIO2->FIOSET |= ((1 << 6) | (1 << 8));
 		LPC_GPIO2->FIOCLR |= (1 << 7);			// Solo led Verde
@@ -77,6 +79,8 @@ void changeRotation(void) {
 
 	} else {				// Para el otro lado	--> P2.3 y P2.5
 		LPC_GPIO2->FIOCLR |= (1 << 4);		// P2.4 Trans. inferior apagado
+		LPC_PWM1->MR4 = 0;
+		LPC_PWM1->LER |= (1 << 4);
 		LPC_PWM1->PCR &= ~(1 << 12);
 		LPC_GPIO2->FIOSET |= ((1 << 6) | (1 << 7));
 		LPC_GPIO2->FIOCLR |= (1 << 8);			// Solo led Azul

@@ -13,7 +13,6 @@
 #include "LPC17xx.h"
 #include "config_func.h"
 
-
 int main(void) {
 
 	configPins();
@@ -37,7 +36,6 @@ void ADC_IRQHandler(void) {
 		LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
 		LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
 		LPC_PWM1->LER |= ((1 << 3) | (1 << 4));		// Actualizo ambos valores
-		//LPC_PWM1->PCR &= ~((1 << 11) | (1 << 12));	// Apago los 2 PWM
 		flags |= (1 << 3); // Habilito flag de motor frenado
 	} else {
 		flags &= ~(1 << 3);
