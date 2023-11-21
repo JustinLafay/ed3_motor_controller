@@ -45,6 +45,9 @@ void configADC(void) {
 	return;
 }
 
+void configUART0(void) {
+}
+
 void emergencyStop(void) {
 	// Apago salidas motores, leds azul y verde, parpadeo rojo
 	LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Leds verde y azul apagados
@@ -52,6 +55,9 @@ void emergencyStop(void) {
 	LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
 	LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
 	LPC_PWM1->LER |= ((1 << 3) | (1 << 4));	// Actualizo ambos valores
+	LPC_PWM1->PCR &= ~(1 << 11) | ~(1 << 12); // Habilitar el control de PWM1.3 y PWM1.4
+
+
 	LPC_GPIO2->FIOCLR |= ((1 << 2) | (1 << 3));	// PWM1.3 y PWM1.4 off
 }
 
@@ -65,7 +71,7 @@ void emergencyStop(void) {
  * */
 
 void changeRotation(void) {
-	LPC_PWM1->TCR = (1<<1) ;
+	LPC_PWM1->TCR = (1 << 1);
 	if (flags & 1) {// Para un lado, apago los otros y enciendo los que van --> P2.2 y P2.4
 		LPC_GPIO2->FIOCLR |= (1 << 5);		// P2.5 Trans. inferior apagado
 		LPC_PWM1->MR3 = 0;
@@ -86,17 +92,17 @@ void changeRotation(void) {
 		LPC_PWM1->PCR |= (1 << 11);
 		LPC_GPIO2->FIOSET |= (1 << 5);	// P2.5 Trans. inferior encendido
 	}
-	LPC_PWM1->TCR = (1<<0) | (1<<3);
+	LPC_PWM1->TCR = (1 << 0) | (1 << 3);
 }
 
-void configDMA(void){
+void configDMA(void) {
 	NVIC_DisableIRQ(DMA_IRQn);
 	GPDMA_Channel_CFG_Type channelCFG;
 
 	GPDMA_Init();
 	channelCFG.ChannelNum = 1;
 	channelCFG.SrcMemAddr = 0;
-	channelCFG.DstMemAddr = (uint32_t)&dma_value;
+	channelCFG.DstMemAddr = (uint32_t) &dma_value;
 	channelCFG.TransferSize = 1;
 	channelCFG.TransferType = GPDMA_TRANSFERTYPE_P2M;
 	channelCFG.TransferWidth = 0;

@@ -3,6 +3,7 @@
 #endif
 
 #include "lpc17xx_gpdma.h"
+#include "lpc17xx_uart.h"
 #include <cr_section_macros.h>
 #include "global_variables.h"
 #include "config_func.h"

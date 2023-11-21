@@ -22,28 +22,32 @@ int main(void) {
 		configDMA();
 		GPDMA_ChannelCmd(1, ENABLE);
 		ADC0Value = (dma_value>>4)&0xFFF;
-		if (ADC0Value < 300) {					// Si el PWM está muy bajo, apago
-			LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
-			LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
-			LPC_GPIO2->FIOCLR |= ((1 << 4) | (1 << 5));	// Apago parte inferior completa Puente H
-			LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
-			LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
-			LPC_PWM1->LER |= ((1 << 3) | (1 << 4));		// Actualizo ambos valores
-			flags |= (1 << 3); 					// Habilito flag de motor frenado
-		} else {
-			flags &= ~(1 << 3);
-			if (flags & 1) {
-				LPC_GPIO2->FIOCLR |= (1 << 7);
-				LPC_GPIO2->FIOSET |= (1 << 6);
-				LPC_PWM1->MR4 = ADC0Value;
-				LPC_PWM1->LER |= (1 << 4);
+
+		if (!(flags & (1 << 1))){
+			if (ADC0Value < 300) {					// Si el PWM está muy bajo, apago
+				LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
+				LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
+				LPC_GPIO2->FIOCLR |= ((1 << 4) | (1 << 5));	// Apago parte inferior completa Puente H
+				LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
+				LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
+				LPC_PWM1->LER |= ((1 << 3) | (1 << 4));		// Actualizo ambos valores
+				flags |= (1 << 3); 					// Habilito flag de motor frenado
 			} else {
-				LPC_GPIO2->FIOCLR |= (1 << 8);
-				LPC_GPIO2->FIOSET |= (1 << 6);
-				LPC_PWM1->MR3 = ADC0Value;
-				LPC_PWM1->LER |= (1 << 3);
+				flags &= ~(1 << 3);
+				if (flags & 1) {
+					LPC_GPIO2->FIOCLR |= (1 << 7);
+					LPC_GPIO2->FIOSET |= (1 << 6);
+					LPC_PWM1->MR4 = ADC0Value;
+					LPC_PWM1->LER |= (1 << 4);
+				} else {
+					LPC_GPIO2->FIOCLR |= (1 << 8);
+					LPC_GPIO2->FIOSET |= (1 << 6);
+					LPC_PWM1->MR3 = ADC0Value;
+					LPC_PWM1->LER |= (1 << 3);
+				}
 			}
 		}
+
 	}
 	return 0;
 }
@@ -77,11 +81,12 @@ void EINT1_IRQHandler(void) {
 void EINT2_IRQHandler(void) {
 	LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago verde y azul
 	LPC_GPIO2->FIOCLR |= (1 << 6); // Prendo rojo
-	delay(100000);
+	delay(3000000);
 	LPC_GPIO2->FIOCLR |= (1 << 6); // Apago rojo
-	delay(100000);
+	delay(3000000);
 	if ((flags & (1 << 1)) != 0) { // Si la parada de emergencia está activada
 		flags &= ~(1 << 1);	// La desactivo
+		LPC_PWM1->PCR |= ((1 << 11) | (1 << 12)); // Habilitar el control de PWM1.3 y PWM1.4
 	} else {
 		flags |= (1 << 1); // Sino, la activo
 		emergencyStop();
