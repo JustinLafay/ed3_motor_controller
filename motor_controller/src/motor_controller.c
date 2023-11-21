@@ -21,8 +21,11 @@ int main(void) {
 	while (1) {
 		configDMA();
 		GPDMA_ChannelCmd(1, ENABLE);
-		ADC0Value = (dma_value>>4)&0xFFF;
-
+		if (flags & (1 << 2)){
+			ADC0Value = velUart;
+		} else {
+			ADC0Value = (dma_value>>4)&0xFFF;
+		}
 		if (!(flags & (1 << 1))){
 			if (ADC0Value < 300) {					// Si el PWM está muy bajo, apago
 				LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
@@ -55,6 +58,40 @@ int main(void) {
 
 	}
 	return 0;
+}
+
+void EINT0_IRQHandler(){
+	if(flags & (1<<2)){		// Modo UART activo, paso a ADC
+		LPC_GPIO2->FIOSET |= ( (1<<6) | (1<<7) | (1<<8));	// Apago leds
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOCLR |= (1<<6);	// Prendo rojo
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOSET |= (1<<6);	// Apago rojo
+		LPC_GPIO2->FIOCLR |= (1<<7);	// Prendo verde
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOSET |= (1<<7);	// Apago verde
+		LPC_GPIO2->FIOCLR |= (1<<8);	// Prendo azul
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOSET |= (1<<8);	// Apago azul
+		for(int i=0; i<3000000; i++){}				// Delay
+		flags &= ~(1<<2);	// Flag en 0
+	}
+	else{				// Modo ADC activo, paso a UART
+		LPC_GPIO2->FIOSET |= ( (1<<6) | (1<<7) | (1<<8));	// Apago leds
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOCLR |= (1<<8);	// Prendo azul
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOSET |= (1<<8);	// Apago azul
+		LPC_GPIO2->FIOCLR |= (1<<7);	// Prendo verde
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOSET |= (1<<7);	// Apago verde
+		LPC_GPIO2->FIOCLR |= (1<<6);	// Prendo rojo
+		for(int i=0; i<3000000; i++){}				// Delay
+		LPC_GPIO2->FIOSET |= (1<<6);	// Apago rojo
+		for(int i=0; i<3000000; i++){}				// Delay
+		flags |= (1<<2);	// Flag en 1
+	}
+	LPC_SC->EXTINT |= (1);   // Limpia bandera
 }
 
 // Handler Interrupción cambio de sentido
@@ -97,4 +134,57 @@ void EINT2_IRQHandler(void) {
 		emergencyStop();
 	}
 	LPC_SC->EXTINT |= (1 << 2); // Limpia bandera
+}
+
+// Handler UART
+void UART0_IRQHandler(void){
+	if( (flags & (1<<2)) != 0){		// Verifico que esté en modo UART
+		uint8_t data;
+
+		// Leer el byte recibido desde el registro de recepción (RBR)
+		data = UART_ReceiveByte(LPC_UART0);
+
+		rxBuffer[rxIndex] = data;	// Almaceno el Byte data en la posición correspondiente de buffer
+
+		if(rxBuffer[0] != 46){		// Si el primero no es "."
+			rxIndex = 0;
+		}
+
+		if(rxBuffer[rxIndex] == 59){		// Si es ";" fin de transmisión
+			if(rxIndex != BUFFER_SIZE-1){
+				for(int i=rxIndex+1; i<BUFFER_SIZE; i++){	// Relleno con 0 los restantes
+					rxBuffer[i] = 0;
+				}
+			}
+			rxIndex = BUFFER_SIZE;			// Buffer completo
+		}
+
+		rxIndex++;							// Si no había llegado al ";" paso al siguiente
+
+		// Verificar si se ha completado la recepción del buffer
+		if (rxIndex >= BUFFER_SIZE) {
+			if(!(acomodar())){			// Si no obtengo errores con los datos
+				if(velUart > 4095){		// Si se pasó del límite, acomodo
+					velUart = 4095;
+				}
+				// Si el sentido es 0, el UART pide sentido 1, y la velocidad está en 0:
+				if( (!(flags & (1))) & (rxBuffer[1] - 48)){
+					changeRotation();
+				}
+				// Si el sentido es 1, el UART pide sentido 0, y la velocidad está en 0
+				else if( (flags & (1)) & (!(rxBuffer[1] - 48))){
+					changeRotation();
+				}
+				flags |= (1<<4);		// Recepción correcta
+			}
+			else{		// Si hubo error, limpio el buffer
+				for(int j=0; j<BUFFER_SIZE; j++){
+					rxBuffer[j] = 0;
+				}
+				flags &= ~(1<<4);		// Recepción incorrecta
+			}
+			rxIndex = 0;	// En caso de error, reinicio, y sino, reinicio igual
+		}
+	}
+
 }

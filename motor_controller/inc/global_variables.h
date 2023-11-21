@@ -1,5 +1,6 @@
 #ifndef GLOBAL_VARIABLES_H
 #define GLOBAL_VARIABLES_H
+#define BUFFER_SIZE 8
 #include "headers.h"
 
 /* Flags:
@@ -14,5 +15,9 @@
 extern uint8_t flags;
 extern uint32_t ADC0Value;
 extern uint32_t dma_value;
+extern volatile uint8_t rxBuffer[BUFFER_SIZE];
+extern volatile uint32_t rxIndex;
+extern volatile uint32_t rxComplete;
+extern uint16_t velUart;
 
 #endif
