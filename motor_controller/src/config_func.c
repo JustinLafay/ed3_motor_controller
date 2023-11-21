@@ -32,6 +32,16 @@ void configPWM1(void) {
 	LPC_PWM1->TCR |= (1 << 3);  // Restablecer el contador y el temporizador
 }
 
+void configTimerCap(void){
+	LPC_SC->PCONP |= (1<<1);		// Habilito Timer
+	LPC_SC->PCLKSEL0 |= (1<<2);		// Clock 100 MHz
+	LPC_PINCON->PINSEL3 |= (3<<20);	// Configuro Pin como Capture
+	LPC_TIM0->CCR |= (1<<1);  		//pag. 508
+	LPC_TIM0->TCR = 3;              //pag. 505
+	LPC_TIM0->TCR &= ~(1<<1);
+	NVIC_EnableIRQ(TIMER0_IRQn);	// Habilito Interrupción por Timer 0
+}
+
 void configADC(void) {
 	LPC_SC->PCONP |= (1 << 12);
 	LPC_ADC->ADCR |= (1 << 21); //habilita el ADC

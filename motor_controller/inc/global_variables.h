@@ -13,12 +13,14 @@
  * */
 
 extern uint8_t flags;
+extern uint8_t data;
+extern uint16_t velUart;
 extern uint32_t ADC0Value;
 extern uint32_t dma_value;
+extern uint32_t value_capture;
+extern volatile uint32_t buffer_capture[2];
 extern volatile uint8_t rxBuffer[BUFFER_SIZE];
 extern volatile uint32_t rxIndex;
 extern volatile uint32_t rxComplete;
-extern uint16_t velUart;
-extern uint8_t data;
 
 #endif

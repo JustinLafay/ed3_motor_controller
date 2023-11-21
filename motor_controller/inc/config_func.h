@@ -10,7 +10,7 @@ void changeRotation(void);
 void frenar(void);
 void delay(int);
 void configDMA(void);
-void configTimerCAP(void);
+void configTimerCap(void);
 int acomodar(void);
 void configUART0(void);
 
