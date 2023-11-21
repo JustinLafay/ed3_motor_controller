@@ -17,13 +17,14 @@ int main(void) {
 	configInterrupts();
 	configPWM1();
 	configADC();
+	configUART0();
 
 	while (1) {
-		configDMA();
-		GPDMA_ChannelCmd(1, ENABLE);
 		if (flags & (1 << 2)){
 			ADC0Value = velUart;
 		} else {
+			configDMA();
+			GPDMA_ChannelCmd(1, ENABLE);
 			ADC0Value = (dma_value>>4)&0xFFF;
 		}
 		if (!(flags & (1 << 1))){
@@ -75,6 +76,7 @@ void EINT0_IRQHandler(){
 		LPC_GPIO2->FIOSET |= (1<<8);	// Apago azul
 		for(int i=0; i<3000000; i++){}				// Delay
 		flags &= ~(1<<2);	// Flag en 0
+		NVIC_DisableIRQ(UART0_IRQn);
 	}
 	else{				// Modo ADC activo, paso a UART
 		LPC_GPIO2->FIOSET |= ( (1<<6) | (1<<7) | (1<<8));	// Apago leds
@@ -90,6 +92,7 @@ void EINT0_IRQHandler(){
 		LPC_GPIO2->FIOSET |= (1<<6);	// Apago rojo
 		for(int i=0; i<3000000; i++){}				// Delay
 		flags |= (1<<2);	// Flag en 1
+		NVIC_EnableIRQ(UART0_IRQn);
 	}
 	LPC_SC->EXTINT |= (1);   // Limpia bandera
 }
@@ -139,7 +142,6 @@ void EINT2_IRQHandler(void) {
 // Handler UART
 void UART0_IRQHandler(void){
 	if( (flags & (1<<2)) != 0){		// Verifico que esté en modo UART
-		uint8_t data;
 
 		// Leer el byte recibido desde el registro de recepción (RBR)
 		data = UART_ReceiveByte(LPC_UART0);

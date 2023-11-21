@@ -12,5 +12,6 @@ void delay(int);
 void configDMA(void);
 void configTimerCAP(void);
 int acomodar(void);
+void configUART0(void);
 
 #endif

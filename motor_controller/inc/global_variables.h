@@ -19,5 +19,6 @@ extern volatile uint8_t rxBuffer[BUFFER_SIZE];
 extern volatile uint32_t rxIndex;
 extern volatile uint32_t rxComplete;
 extern uint16_t velUart;
+extern uint8_t data;
 
 #endif

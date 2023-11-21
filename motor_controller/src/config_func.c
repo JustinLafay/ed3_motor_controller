@@ -1,4 +1,5 @@
 #include "headers.h"
+#include "lpc17xx_uart.h"
 
 void configPins(void) {
 	LPC_GPIO2->FIODIR |= (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7) | (1 << 8);
@@ -48,11 +49,12 @@ void configADC(void) {
 
 void configUART0(void) {
 	LPC_PINCON->PINSEL0 |= (1 << 4) | (1 << 6); // P0.2 como TXD0 y P0.3 como RXD0
+	LPC_PINCON->PINMODE0 &= ~(3 << 4) | (3 << 6);
 	UART_CFG_Type uartConfig;
 	UART_ConfigStructInit(&uartConfig);
 	UART_Init(LPC_UART0, &uartConfig);
 	UART_IntConfig(LPC_UART0, UART_INTCFG_RBR, ENABLE);
-	NVIC_EnableIRQ(UART0_IRQn);
+	NVIC_DisableIRQ(UART0_IRQn);
 }
 
 void emergencyStop(void) {
