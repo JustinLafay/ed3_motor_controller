@@ -171,10 +171,12 @@ void UART0_IRQHandler(void){
 				}
 				// Si el sentido es 0, el UART pide sentido 1, y la velocidad está en 0:
 				if( (!(flags & (1))) & (rxBuffer[1] - 48)){
+					flags |= 1;
 					changeRotation();
 				}
 				// Si el sentido es 1, el UART pide sentido 0, y la velocidad está en 0
 				else if( (flags & (1)) & (!(rxBuffer[1] - 48))){
+					flags &= ~(1);
 					changeRotation();
 				}
 				flags |= (1<<4);		// Recepción correcta
