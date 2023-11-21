@@ -131,7 +131,7 @@ void configDMA(void) {
 
 void frenar(void) {
 	ADC0Value = 0;
-	flags |= (1 << 3);
+	flags |= (1 << FRENANDO);
 }
 
 void delay(int time) {
@@ -141,7 +141,7 @@ void delay(int time) {
 
 int acomodar(void){		// Acomodo valores recibidos del UART, si retorna 1, es porque hubo error
 
-	flags &= ~(1<<5);	// Limpio flag de fin de acomodo, para comenzar a acomodar
+	flags &= ~(1<<UART_ACC);	// Limpio flag de fin de acomodo, para comenzar a acomodar
 
     // INDEX 1					Si no es 0 ni 1
     if( ( (rxBuffer[1]-48 != 0) & (rxBuffer[1]-48 != 1) ) ){

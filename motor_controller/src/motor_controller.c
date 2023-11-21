@@ -21,14 +21,14 @@ int main(void) {
 	configTimerCap();
 
 	while (1) {
-		if (flags & (1 << 2)) {
+		if (flags & (1 << MODO_ADC_UART)) {
 			ADC0Value = velUart;
 		} else {
 			configDMA();
 			GPDMA_ChannelCmd(1, ENABLE);
 			ADC0Value = (dma_value >> 4) & 0xFFF;
 		}
-		if (!(flags & (1 << 1))) {
+		if (!(flags & (1 << EMERGENCIA))) {
 			if (ADC0Value < 300) {			// Si el PWM está muy bajo, apago
 				LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
 				LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
@@ -38,7 +38,7 @@ int main(void) {
 				LPC_PWM1->LER |= ((1 << 3) | (1 << 4));	// Actualizo ambos valores
 				flags |= (1 << 3); 			// Habilito flag de motor frenado
 			} else {
-				flags &= ~(1 << 3);
+				flags &= ~(1 << FRENANDO);
 				if (flags & 1) {
 					LPC_GPIO2->FIOCLR |= (1 << 7);
 					LPC_GPIO2->FIOSET |= (1 << 6);
@@ -63,7 +63,7 @@ int main(void) {
 }
 
 void EINT0_IRQHandler() {
-	if (flags & (1 << 2)) {		// Modo UART activo, paso a ADC
+	if (flags & (1 << MODO_ADC_UART)) {		// Modo UART activo, paso a ADC
 		LPC_GPIO2->FIOSET |= ((1 << 6) | (1 << 7) | (1 << 8));	// Apago leds
 		for (int i = 0; i < 3000000; i++) {
 		}				// Delay
@@ -81,7 +81,7 @@ void EINT0_IRQHandler() {
 		LPC_GPIO2->FIOSET |= (1 << 8);	// Apago azul
 		for (int i = 0; i < 3000000; i++) {
 		}				// Delay
-		flags &= ~(1 << 2);	// Flag en 0
+		flags &= ~(1 << MODO_ADC_UART);	// Flag en 0
 		NVIC_DisableIRQ(UART0_IRQn);
 	} else {				// Modo ADC activo, paso a UART
 		LPC_GPIO2->FIOSET |= ((1 << 6) | (1 << 7) | (1 << 8));	// Apago leds
@@ -101,7 +101,7 @@ void EINT0_IRQHandler() {
 		LPC_GPIO2->FIOSET |= (1 << 6);	// Apago rojo
 		for (int i = 0; i < 3000000; i++) {
 		}				// Delay
-		flags |= (1 << 2);	// Flag en 1
+		flags |= (1 << MODO_ADC_UART);	// Flag en 1
 		NVIC_EnableIRQ(UART0_IRQn);
 	}
 	LPC_SC->EXTINT |= (1);   // Limpia bandera
@@ -110,7 +110,7 @@ void EINT0_IRQHandler() {
 // Handler Interrupción cambio de sentido
 void EINT1_IRQHandler(void) {
 	frenar();
-	if (flags & (1 << 3)) {	// Verifico que el motor esté frenado para permitir el cambio de sentido
+	if (flags & (1 << FRENANDO)) {	// Verifico que el motor esté frenado para permitir el cambio de sentido
 		flags ^= 1;
 		changeRotation();
 		if ((flags & (1)) == 1) { // Si el sentido de giro, es 1
@@ -126,7 +126,7 @@ void EINT1_IRQHandler(void) {
 			LPC_GPIO2->FIOSET |= (1 << 7); // Apago verde
 			delay(3000000);
 		}
-		flags &= ~(1 << 3);	// Deshabilito flag de motor frenado
+		flags &= ~(1 << FRENANDO);	// Deshabilito flag de motor frenado
 	}
 	delay(10000);
 	LPC_SC->EXTINT |= (1 << 1);   // Limpia bandera
@@ -139,11 +139,11 @@ void EINT2_IRQHandler(void) {
 	delay(3000000);
 	LPC_GPIO2->FIOCLR |= (1 << 6); // Apago rojo
 	delay(3000000);
-	if ((flags & (1 << 1)) != 0) { // Si la parada de emergencia está activada
+	if ((flags & (1 << EMERGENCIA)) != 0) { // Si la parada de emergencia está activada
 		flags &= ~(1 << 1);	// La desactivo
 		LPC_PWM1->PCR |= ((1 << 11) | (1 << 12)); // Habilitar el control de PWM1.3 y PWM1.4
 	} else {
-		flags |= (1 << 1); // Sino, la activo
+		flags |= (1 << EMERGENCIA); // Sino, la activo
 		emergencyStop();
 	}
 	LPC_SC->EXTINT |= (1 << 2); // Limpia bandera
@@ -151,7 +151,7 @@ void EINT2_IRQHandler(void) {
 
 // Handler UART
 void UART0_IRQHandler(void) {
-	if ((flags & (1 << 2)) != 0) {		// Verifico que esté en modo UART
+	if ((flags & (1 << MODO_ADC_UART)) != 0) {		// Verifico que esté en modo UART
 
 		// Leer el byte recibido desde el registro de recepción (RBR)
 		data = UART_ReceiveByte(LPC_UART0);
@@ -190,12 +190,12 @@ void UART0_IRQHandler(void) {
 					changeRotation();
 				}
 
-				flags |= (1 << 4);		// Recepción correcta
+				flags |= (1 << UART_OK);		// Recepción correcta
 			} else {		// Si hubo error, limpio el buffer
 				for (int j = 0; j < BUFFER_SIZE; j++) {
 					rxBuffer[j] = 0;
 				}
-				flags &= ~(1 << 4);		// Recepción incorrecta
+				flags &= ~(1 << UART_OK);		// Recepción incorrecta
 			}
 			rxIndex = 0;// En caso de error, reinicio, y sino, reinicio igual
 		}

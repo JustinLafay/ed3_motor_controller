@@ -12,6 +12,13 @@
  * Bit 5 : Bit de fin de acomodo UART, 1 si llegó al ";"
  * */
 
+#define SENSO_GIRO 		0
+#define EMERGENCIA 		1
+#define MODO_ADC_UART	2
+#define FRENANDO		3
+#define UART_OK			4
+#define	UART_ACC		5
+
 extern uint8_t flags;
 extern uint8_t data;
 extern uint16_t velUart;
