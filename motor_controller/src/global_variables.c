@@ -1,5 +1,7 @@
 #include "headers.h"
 
+// Initialisacion de todas las variables (ver global_variables.h para descripcion)
+
 uint8_t flags = 0;
 uint32_t velocidad_motor = 0;
 uint32_t dma_value = 0;
