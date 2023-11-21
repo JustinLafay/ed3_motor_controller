@@ -56,8 +56,6 @@ void emergencyStop(void) {
 	LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
 	LPC_PWM1->LER |= ((1 << 3) | (1 << 4));	// Actualizo ambos valores
 	LPC_PWM1->PCR &= ~(1 << 11) | ~(1 << 12); // Habilitar el control de PWM1.3 y PWM1.4
-
-
 	LPC_GPIO2->FIOCLR |= ((1 << 2) | (1 << 3));	// PWM1.3 y PWM1.4 off
 }
 

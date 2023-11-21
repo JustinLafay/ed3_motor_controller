@@ -46,6 +46,11 @@ int main(void) {
 					LPC_PWM1->LER |= (1 << 3);
 				}
 			}
+		} else {
+			LPC_GPIO2->FIOSET |= (1 << 6); // Prendo rojo
+			delay(3000000);
+			LPC_GPIO2->FIOCLR |= (1 << 6); // Apago rojo
+			delay(3000000);
 		}
 
 	}
@@ -79,7 +84,7 @@ void EINT1_IRQHandler(void) {
 
 // Handler Parada de emergencia
 void EINT2_IRQHandler(void) {
-	LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago verde y azul
+	LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago verde y 33333
 	LPC_GPIO2->FIOCLR |= (1 << 6); // Prendo rojo
 	delay(3000000);
 	LPC_GPIO2->FIOCLR |= (1 << 6); // Apago rojo
