@@ -18,16 +18,32 @@
 #define FRENANDO		3
 #define UART_OK			4
 #define	UART_ACC		5
-
 extern uint8_t flags;
-extern uint8_t data;
+
+// Datos recibidos por
+extern uint8_t data_uart;
+
+// Valor de velocidad con UART
 extern uint16_t velUart;
-extern uint32_t ADC0Value;
+
+extern uint32_t velocidad_motor;
+
+// Valor de velocidad con ADC (por DMA)
 extern uint32_t dma_value;
+
+// Valor de diferencia de tiempo con timer capture
 extern uint32_t value_capture;
+
+//Buffer de tiempo capture
 extern volatile uint32_t buffer_capture[2];
+
+// Almacén de datos de recepción UART
 extern volatile uint8_t rxBuffer[BUFFER_SIZE];
+
+// Posición actual del almacen de datos de recepción UART
 extern volatile uint32_t rxIndex;
+
+// Flag de recepción completa UART
 extern volatile uint32_t rxComplete;
 
 #endif

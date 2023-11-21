@@ -130,7 +130,7 @@ void configDMA(void) {
 }
 
 void frenar(void) {
-	ADC0Value = 0;
+	velocidad_motor = 0;
 	flags |= (1 << FRENANDO);
 }
 

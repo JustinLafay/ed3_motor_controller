@@ -22,14 +22,14 @@ int main(void) {
 
 	while (1) {
 		if (flags & (1 << MODO_ADC_UART)) {
-			ADC0Value = velUart;
+			velocidad_motor = velUart;
 		} else {
 			configDMA();
 			GPDMA_ChannelCmd(1, ENABLE);
-			ADC0Value = (dma_value >> 4) & 0xFFF;
+			velocidad_motor = (dma_value >> 4) & 0xFFF;
 		}
 		if (!(flags & (1 << EMERGENCIA))) {
-			if (ADC0Value < 300) {			// Si el PWM está muy bajo, apago
+			if (velocidad_motor < 300) {			// Si el PWM está muy bajo, apago
 				LPC_GPIO2->FIOSET |= ((1 << 7) | (1 << 8));	// Apago leds Verde y Azul
 				LPC_GPIO2->FIOCLR |= (1 << 6);				// Enciendo led Rojo
 				LPC_GPIO2->FIOCLR |= ((1 << 4) | (1 << 5));	// Apago parte inferior completa Puente H
@@ -42,12 +42,12 @@ int main(void) {
 				if (flags & 1) {
 					LPC_GPIO2->FIOCLR |= (1 << 7);
 					LPC_GPIO2->FIOSET |= (1 << 6);
-					LPC_PWM1->MR4 = ADC0Value;
+					LPC_PWM1->MR4 = velocidad_motor;
 					LPC_PWM1->LER |= (1 << 4);
 				} else {
 					LPC_GPIO2->FIOCLR |= (1 << 8);
 					LPC_GPIO2->FIOSET |= (1 << 6);
-					LPC_PWM1->MR3 = ADC0Value;
+					LPC_PWM1->MR3 = velocidad_motor;
 					LPC_PWM1->LER |= (1 << 3);
 				}
 			}
@@ -110,7 +110,7 @@ void EINT0_IRQHandler() {
 // Handler Interrupción cambio de sentido
 void EINT1_IRQHandler(void) {
 	frenar();
-	if (flags & (1 << FRENANDO)) {	// Verifico que el motor esté frenado para permitir el cambio de sentido
+	if (flags & (1 << FRENANDO)) {// Verifico que el motor esté frenado para permitir el cambio de sentido
 		flags ^= 1;
 		changeRotation();
 		if ((flags & (1)) == 1) { // Si el sentido de giro, es 1
@@ -151,12 +151,12 @@ void EINT2_IRQHandler(void) {
 
 // Handler UART
 void UART0_IRQHandler(void) {
-	if ((flags & (1 << MODO_ADC_UART)) != 0) {		// Verifico que esté en modo UART
+	if ((flags & (1 << MODO_ADC_UART)) != 0) {// Verifico que esté en modo UART
 
 		// Leer el byte recibido desde el registro de recepción (RBR)
-		data = UART_ReceiveByte(LPC_UART0);
+		data_uart = UART_ReceiveByte(LPC_UART0);
 
-		rxBuffer[rxIndex] = data;// Almaceno el Byte data en la posición correspondiente de buffer
+		rxBuffer[rxIndex] = data_uart;// Almaceno el Byte data_uart en la posición correspondiente de buffer
 
 		if (rxBuffer[0] != 46) {		// Si el primero no es "."
 			rxIndex = 0;
