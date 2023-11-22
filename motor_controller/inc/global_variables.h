@@ -46,10 +46,13 @@ extern volatile uint32_t rxIndex;
 // Flag de recepción completa UART
 extern volatile uint32_t rxComplete;
 
+// Array de promedio ADC
 extern uint32_t prom[10];
 
+// Indice de promedio
 extern uint8_t indice;
 
+// Summa de promedio
 extern uint8_t acum;
 
 #endif
