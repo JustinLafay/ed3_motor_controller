@@ -36,7 +36,7 @@ void configTimerCap(void){
 	LPC_SC->PCONP |= (1<<1);		// Habilito Timer
 	LPC_SC->PCLKSEL0 |= (1<<2);		// Clock 100 MHz
 	LPC_PINCON->PINSEL3 |= (3<<20);	// Configuro Pin como Capture
-	LPC_TIM0->CCR |= (1<<1);  		//pag. 508
+	LPC_TIM0->CCR |= (1<<1)|(1<<2);;  		//pag. 508
 	LPC_TIM0->TCR = 3;              //pag. 505
 	LPC_TIM0->TCR &= ~(1<<1);
 	NVIC_EnableIRQ(TIMER0_IRQn);	// Habilito Interrupción por Timer 0
@@ -76,40 +76,6 @@ void emergencyStop(void) {
 	LPC_PWM1->LER |= ((1 << 3) | (1 << 4));	// Actualizo ambos valores
 	LPC_PWM1->PCR &= ~(1 << 11) | ~(1 << 12); // Habilitar el control de PWM1.3 y PWM1.4
 	LPC_GPIO2->FIOCLR |= ((1 << 2) | (1 << 3));	// PWM1.3 y PWM1.4 off
-}
-
-// Generar movimiento
-
-/*
- * Verificar el sentido, con 1 --> P2.2 PWM1.3 y P2.4, con 0 --> P2.3 PWM1.4 y P2.5
- * Verificar previo
- * Apagar los que no van y encender los nuevos
- * Darle la velocidad al pwm
- * */
-
-void changeRotation(void) {
-	LPC_PWM1->TCR = (1 << 1);	// Deshabilito el contador y el temporizador
-	if (flags & 1) {// Para un lado, apago los otros y enciendo los que van --> P2.2 y P2.4
-		LPC_GPIO2->FIOCLR |= (1 << 5);		// P2.5 Trans. inferior apagado
-		LPC_PWM1->MR3 = 0;					// Valor del PWM1.3 en 0
-		LPC_PWM1->LER |= (1 << 3);
-		LPC_PWM1->PCR &= ~(1 << 11);
-		LPC_GPIO2->FIOSET |= ((1 << 6) | (1 << 8));
-		LPC_GPIO2->FIOCLR |= (1 << 7);				// Solo led Verde
-		LPC_PWM1->PCR |= (1 << 12);
-		LPC_GPIO2->FIOSET |= (1 << 4);	// P2.4 Trans. inferior encendido
-
-	} else {				// Para el otro lado	--> P2.3 y P2.5
-		LPC_GPIO2->FIOCLR |= (1 << 4);		// P2.4 Trans. inferior apagado
-		LPC_PWM1->MR4 = 0;					// Valor del PWM1.4 en 0
-		LPC_PWM1->LER |= (1 << 4);
-		LPC_PWM1->PCR &= ~(1 << 12);
-		LPC_GPIO2->FIOSET |= ((1 << 6) | (1 << 7));
-		LPC_GPIO2->FIOCLR |= (1 << 8);				// Solo led Azul
-		LPC_PWM1->PCR |= (1 << 11);
-		LPC_GPIO2->FIOSET |= (1 << 5);	// P2.5 Trans. inferior encendido
-	}
-	LPC_PWM1->TCR = (1 << 0) | (1 << 3);	// Habilito el temporizador y el contador
 }
 
 void configDMA(void) {
@@ -202,4 +168,83 @@ int acomodar(void){		// Acomodo valores recibidos del UART, si retorna 1, es por
     }
 
     return 0;		// Si paso todas las pruebas, devuelvo un 0
+}
+
+void promedio(void){
+	if(indice >= 10){	// Si el índice se pasó de largo
+		indice = 0;		// reseteo
+	}
+	prom[indice] = (dma_value>>4)&0xFFF;	// Copio el valor del adc a un array de 10 últimos valores
+	acum = 0;										// Acumulador que contará cuántos 0 hay
+	for(int i = 0; i < 10; i++){
+		if(prom[i] < 300){							// Función para contar, busco evitar lecturas erróneas
+			acum ++;								// en caso de que esté frenado
+		}
+	}
+	if(acum >= 6){									// Si son 6 o más ceros
+		velocidad_motor = 0;								// Es 0
+	}
+	else{
+		velocidad_motor = prom[indice];					// Sino, toma el valor correspondiente
+	}												// Falta ver como suprimir lecturas erróneas
+	if(velocidad_motor > 3800){
+		velocidad_motor = 4095;							// Si llega a 3800, recorto al tope para full duty
+	}
+	if(velocidad_motor < 300){
+		velocidad_motor = 0;								// Esto creo que no hace falta, se soluciona más arriba
+	}
+	indice ++;
+}
+
+// Generar movimiento
+
+/*
+ * Verificar el sentido, con 1 --> P2.2 PWM1.3 y P2.4, con 0 --> P2.3 PWM1.4 y P2.5
+ * Verificar previo
+ * Apagar los que no van y encender los nuevos
+ * Darle la velocidad al pwm
+ * */
+
+void girar(uint32_t velocidad, uint8_t sentido){
+	if(velocidad < 300){	// Si el PWM está muy bajo, apago
+		LPC_GPIO2->FIOSET |= ( (1<<7) | (1<<8) );	// Apago leds Verde y Azul
+		LPC_GPIO2->FIOCLR |= (1<<6);				// Enciendo led Rojo
+		LPC_GPIO2->FIOCLR |= ( (1<<4) | (1<<5) );	// Apago parte inferior completa Puente H
+		LPC_PWM1->MR3 = 0;  						// Valor de PWM1.3 en 0
+		LPC_PWM1->MR4 = 0;							// Valor de PWM1.4 en 0
+		LPC_PWM1->LER |= ( (1<<3) | (1<<4) );		// Actualizo ambos valores
+		//LPC_PWM1->PCR &= ~( (1<<11) | (1<<12) );	// Apago los 2 PWM
+		flags |= (1<<3);							// Habilito flag de motor frenado
+	}
+	else{
+		if(sentido){		// Para un lado, apago los otros y enciendo los que van --> P2.2 y P2.4
+			LPC_GPIO2->FIOCLR |= (1<<5);			// P2.5 Trans. inferior apagado
+			LPC_PWM1->MR4 = 0;						// PWM1.4 en 0
+			LPC_PWM1->LER |= (1<<4);				// Actualizo el valor
+			LPC_GPIO2->FIOCLR |= (1<<3);			// Apago PWM1.4
+
+			LPC_GPIO2->FIOSET |= ( (1<<6) | (1<<8) );
+			LPC_GPIO2->FIOCLR |= (1<<7);			// Solo led Verde
+
+			LPC_GPIO2->FIOSET |= (1<<4);			// P2.4 Trans. inferior encendido
+			LPC_PWM1->MR3 = velocidad;				// PWM1.3 con nuevo valor de velocidad
+			LPC_PWM1->LER |= (1<<3);				// Actualizo
+
+		}
+		else{				// Para el otro lado	--> P2.3 y P2.5
+			LPC_GPIO2->FIOCLR |= (1<<4);			// P2.4 Trans. inferior apagado
+			LPC_PWM1->MR3 = 0;						// PWM1.3 en 0
+			LPC_PWM1->LER |= (1<<3);				// Actualizo el valor
+			LPC_GPIO2->FIOCLR |= (1<<2);
+
+			LPC_GPIO2->FIOSET |= ( (1<<6) | (1<<7) );
+			LPC_GPIO2->FIOCLR |= (1<<8);			// Solo led Azul
+
+			LPC_GPIO2->FIOSET |= (1<<5);			// P2.5 Trans. inferior encendido
+			LPC_PWM1->MR4 = velocidad;				// PWM1.4 con nuevo valor de velocidad
+			LPC_PWM1->LER |= (1<<4);				// Actualizo
+		}
+		flags &= ~(1<<3);	// Deshabilito flag de motor frenado
+	}
+
 }

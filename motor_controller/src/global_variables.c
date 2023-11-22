@@ -12,3 +12,6 @@ uint16_t velUart = 0;
 uint8_t data_uart = 0;
 volatile uint32_t buffer_capture[2];
 uint32_t value_capture = 0;
+uint32_t prom[10] = {0,0,0,0,0,0,0,0,0,0};
+uint8_t indice = 0;
+uint8_t acum = 0;

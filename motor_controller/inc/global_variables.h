@@ -46,4 +46,10 @@ extern volatile uint32_t rxIndex;
 // Flag de recepción completa UART
 extern volatile uint32_t rxComplete;
 
+extern uint32_t prom[10];
+
+extern uint8_t indice;
+
+extern uint8_t acum;
+
 #endif
