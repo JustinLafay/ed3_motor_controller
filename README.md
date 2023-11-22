@@ -1,7 +1,7 @@
 # ED3 Motor controller
 Project for controlling an electric motor with H bridge and LPC1769 microcontroller. 
 ## Project submission file
-All the project is explained in the project submission file.
+All the project is explained in the project submission file (ED3.pdf).
 ## UART Codes
 They are 2 UART codes, one is in .exe format and the other in .py format.
 The objective of those 2 codes are the same : transmit data of speed and rotation direction of the DC electric motor to the LPC1769.
