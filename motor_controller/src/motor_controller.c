@@ -20,6 +20,11 @@ int main(void) {
 	configUART0();
 	configTimerCap();
 
+	if (SysTick_Config(SystemCoreClock/10)){	// Systick 10ms
+			while (1); // En caso de error
+	}
+
+
 	while (1) {									// Loop principal
 
 		if (flags & (1 << MODO_ADC_UART)) {				// Si está en modo UART
@@ -34,12 +39,7 @@ int main(void) {
 		if (!(flags & (1 << EMERGENCIA))) {	// Si la parada de emergecia no está activada
 			girar(velocidad_motor, flags & (1) );
 			delay(3000000);
-		} else {
-			LPC_GPIO2->FIOSET |= (1 << 6); // Prendo rojo
-			delay(3000000);
-			LPC_GPIO2->FIOCLR |= (1 << 6); // Apago rojo
-			delay(3000000);
-		}
+		} else {}
 	}
 	return 0;
 }
@@ -181,4 +181,15 @@ void TIMER0_IRQHandler() {
 	value_capture = buffer_capture[0] - buffer_capture[1];
 
 	LPC_TIM0->IR |= 1; //Limpia bandera de interrupci�n
+}
+
+void SysTick_Handler(void) {
+	if(flags & (1<<EMERGENCIA)){
+	    if(LPC_GPIO2->FIOPIN & (1<<6)){
+	    	LPC_GPIO2->FIOCLR |= (1<<6);
+	    }
+	    else{
+	    	LPC_GPIO2->FIOSET |= (1<<6);
+	    }
+	}
 }
